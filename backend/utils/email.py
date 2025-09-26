@@ -1,32 +1,39 @@
-
 import os
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 
 def send_email(to_email, subject, html_content):
     """
-    Sends an email using the SendGrid API.
+    Sends an email using the Brevo (Sendinblue) API.
     """
     try:
-        # It's a good practice to have a single, verified sender email
-        sender_email = os.environ.get('EMAIL_ADDRESS') 
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        
-        message = Mail(
-            from_email=sender_email,
-            to_emails=to_email,
-            subject=subject,
-            html_content=html_content
+        sender_email = os.environ.get('EMAIL_ADDRESS')
+        api_key = os.environ.get('BREVO_API_KEY') # Use BREVO_API_KEY
+
+        configuration = sib_api_v3_sdk.Configuration()
+        configuration.api_key['api-key'] = api_key
+
+        api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+
+        sender = {"name": "PulseAI", "email": sender_email} # Brevo requires sender name
+        to = [{"email": to_email}]
+
+        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+            to=to,
+            html_content=html_content,
+            sender=sender,
+            subject=subject
         )
-        
-        response = sg.send(message)
-        
-        # You can add more robust logging here if needed
-        print(f"Email sent to {to_email}, status code: {response.status_code}")
-        
+
+        response = api_instance.send_transac_email(send_smtp_email)
+
+        print(f"Email sent to {to_email} via Brevo. Response: {response}")
+
         return True, "Email sent successfully"
 
+    except ApiException as e:
+        print(f"Error sending email with Brevo API: {e}")
+        return False, str(e)
     except Exception as e:
-        # Log the exception for debugging
-        print(f"Error sending email with SendGrid: {e}")
+        print(f"An unexpected error occurred while sending email with Brevo: {e}")
         return False, str(e)

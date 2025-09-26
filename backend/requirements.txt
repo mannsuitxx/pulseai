@@ -5,4 +5,4 @@ PyJWT
 python-dotenv
 google-generativeai
 gunicorn
-sendgrid
+brevo-python
