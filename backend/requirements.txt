@@ -1,0 +1,6 @@
+Flask
+Flask-Cors
+Flask-PyMongo
+PyJWT
+python-dotenv
+google-generativeai
