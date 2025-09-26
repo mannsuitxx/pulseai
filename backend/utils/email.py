@@ -9,6 +9,8 @@ def send_email(to_email, subject, html_content):
     try:
         sender_email = os.environ.get('EMAIL_ADDRESS')
         api_key = os.environ.get('BREVO_API_KEY') # Use BREVO_API_KEY
+        print(f"DEBUG: BREVO_API_KEY being used: {api_key}")
+        print(f"DEBUG: SENDER_EMAIL being used: {sender_email}")
 
         configuration = sib_api_v3_sdk.Configuration()
         configuration.api_key['api-key'] = api_key
