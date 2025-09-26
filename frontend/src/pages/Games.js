@@ -1,6 +1,6 @@
 
-import React, { useEffect, useState, useCallback } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
+import api from '../api'; // Import the centralized API
 import { useAuth } from '../contexts/AuthContext';
 import {
     Container,
@@ -30,14 +30,14 @@ const Games = () => {
 
     const fetchQuestions = useCallback(async () => {
         try {
-            const questionsResponse = await axios.get('http://localhost:5000/game/questions', {
-                headers: token ? { 'x-access-token': token } : {}
+            const questionsResponse = await api.get('/game/questions', {
+                headers: { Authorization: `Bearer ${token}` }
             });
             let fetchedQuestions = questionsResponse.data;
 
             let userAnswers = {};
             if (token) {
-                const userAnswersResponse = await axios.get('http://localhost:5000/game/user-answers', {
+                const userAnswersResponse = await api.get('/game/user-answers', {
                     headers: { 'x-access-token': token }
                 });
                 userAnswersResponse.data.forEach(answer => {
@@ -98,7 +98,7 @@ const Games = () => {
         }
 
         try {
-            const response = await axios.post('http://localhost:5000/game/submit-single', {
+            const response = await api.post('/game/submit-single', {
                 question_id: questionId,
                 selected_answer: selectedAnswer
             }, {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api'; // Import the centralized API
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -93,9 +93,10 @@ const AdminDashboard = () => {
   const handleDeleteSelectedQuizzes = async () => {
     if (window.confirm(`Are you sure you want to delete ${selectedQuizzes.length} selected quizzes?`)) {
       try {
-        await axios.post('http://localhost:5000/admin/questions/delete-many', { ids: selectedQuizzes }, {
+        await api.post('/admin/questions/delete-many', { ids: selectedQuizzes }, {
           headers: { 'x-access-token': token }
         });
+
         setQuestions(questions.filter(question => !selectedQuizzes.includes(question._id)));
         setSelectedQuizzes([]);
         setSelectAllQuizzes(false);
@@ -118,7 +119,7 @@ const AdminDashboard = () => {
 
     const fetchEmergencyContacts = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/emergency/emergency_contacts', {
+            const response = await api.get('/emergency/emergency_contacts', {
                 headers: { 'x-access-token': token }
             });
             setEmergencyContacts(response.data);
@@ -134,20 +135,20 @@ const AdminDashboard = () => {
 
         const fetchUsers = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/admin/users', {
+                const usersResponse = await api.get('/admin/users', {
                     headers: { 'x-access-token': token }
                 });
-                setUsers(response.data);
+                setUsers(usersResponse.data);
             } catch (error) {
                 console.error('Error fetching users:', error);
             }
         };
         const fetchQuestions = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/game/questions', {
+                const questionsResponse = await api.get('/game/questions', {
                     headers: { 'x-access-token': token }
                 });
-                setQuestions(response.data);
+                setQuestions(questionsResponse.data);
             } catch (error) {
                 console.error('Error fetching questions:', error);
             }
@@ -155,11 +156,11 @@ const AdminDashboard = () => {
 
         const fetchDisasters = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/get_daily_reports', {
+                const disastersResponse = await api.get('/get_daily_reports', {
                     headers: { 'x-access-token': token }
                 });
-                setDisasterData(response.data);
-                console.log("Fetched disaster data:", response.data); // Debug log
+                setDisasterData(disastersResponse.data);
+                console.log("Fetched disaster data:", disastersResponse.data); // Debug log
             } catch (error) {
                 console.error('Error fetching disasters:', error);
             }
@@ -176,7 +177,7 @@ const AdminDashboard = () => {
 
     const deleteUser = async (userId) => {
         try {
-            await axios.delete(`http://localhost:5000/admin/users/${userId}`, {
+            await api.delete(`/admin/users/${userId}`, {
                 headers: { 'x-access-token': token }
             });
             setUsers(users.filter(user => user._id !== userId));
@@ -187,7 +188,7 @@ const AdminDashboard = () => {
 
     const handleRoleChange = async (userId, newRole) => {
         try {
-            await axios.put(`http://localhost:5000/admin/users/${userId}/role`, 
+            await api.put(`/admin/users/${userId}/role`, 
                 { role: newRole },
                 { headers: { 'x-access-token': token } }
             );
@@ -204,7 +205,7 @@ const AdminDashboard = () => {
 
     const deleteQuestion = async (questionId) => {
         try {
-            await axios.delete(`http://localhost:5000/admin/questions/${questionId}`, {
+            await api.delete(`/admin/questions/${questionId}`, {
                 headers: { 'x-access-token': token }
             });
             setQuestions(questions.filter(q => q._id !== questionId));
@@ -216,7 +217,7 @@ const AdminDashboard = () => {
     const handleDeleteDisaster = async (disasterId) => {
         if (window.confirm('Are you sure you want to delete this disaster entry?')) {
             try {
-                await axios.delete(`http://localhost:5000/delete_daily_report/${disasterId}`, {
+                await api.delete(`/delete_daily_report/${disasterId}`, {
                     headers: { 'x-access-token': token }
                 });
                 setDisasterData(disasterData.filter(disaster => disaster._id !== disasterId));
@@ -235,7 +236,7 @@ const AdminDashboard = () => {
     const addQuestion = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:5000/admin/questions', { ...newQuestion, options: newQuestion.options.split(',') }, {
+            const response = await api.post('/admin/questions', { ...newQuestion, options: newQuestion.options.split(',') }, {
                 headers: { 'x-access-token': token }
             });
             setQuestions([...questions, response.data.question]);
@@ -261,7 +262,7 @@ const AdminDashboard = () => {
     const handleUpdateQuestion = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`http://localhost:5000/admin/questions/${editingQuestion}`, editedQuestionData, {
+            await api.put(`/admin/questions/${editingQuestion}`, editedQuestionData, {
                 headers: { 'x-access-token': token }
             });
             setQuestions(questions.map(q => q._id === editingQuestion ? { ...q, ...editedQuestionData, options: editedQuestionData.options.split(',') } : q));
@@ -279,7 +280,7 @@ const AdminDashboard = () => {
 
     const handleGenerateQuiz = async () => {
         try {
-            const response = await axios.post('http://localhost:5000/admin/generate_quiz', {
+            const response = await api.post('/admin/generate_quiz', {
                 topic: geminiTopic,
                 num_questions: parseInt(geminiNumQuestions)
             }, {
@@ -298,7 +299,7 @@ const AdminDashboard = () => {
   const handleDeleteSelectedDisasters = async () => {
     if (window.confirm(`Are you sure you want to delete ${selectedDisasters.length} selected disaster entries?`)) {
       try {
-        await axios.post('http://localhost:5000/admin/disasters/delete-many', { ids: selectedDisasters }, {
+        await api.post('/admin/disasters/delete-many', { ids: selectedDisasters }, {
           headers: { 'x-access-token': token }
         });
         setDisasterData(disasterData.filter(disaster => !selectedDisasters.includes(disaster._id)));
@@ -319,7 +320,7 @@ const AdminDashboard = () => {
     const addContact = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:5000/emergency/emergency_contacts', newContact, {
+            const response = await api.post('/emergency/emergency_contacts', newContact, {
                 headers: { 'x-access-token': token }
             });
             setEmergencyContacts([...emergencyContacts, response.data.contact]);
@@ -331,7 +332,7 @@ const AdminDashboard = () => {
     
     const deleteContact = async (contactId) => {
         try {
-            await axios.delete(`http://localhost:5000/emergency/emergency_contacts/${contactId}`, {
+            await api.delete(`/emergency/emergency_contacts/${contactId}`, {
                 headers: { 'x-access-token': token }
             });
             setEmergencyContacts(emergencyContacts.filter(c => c._id !== contactId));
@@ -352,7 +353,7 @@ const AdminDashboard = () => {
     const handleUpdateContact = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`http://localhost:5000/emergency/emergency_contacts/${editingContact}`, editedContactData, {
+            await api.put(`/emergency/emergency_contacts/${editingContact}`, editedContactData, {
                 headers: { 'x-access-token': token }
             });
             setEmergencyContacts(emergencyContacts.map(c => c._id === editingContact ? editedContactData : c));
@@ -370,7 +371,7 @@ const AdminDashboard = () => {
 
     const fetchLiveDemos = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/admin/live-demos', {
+            const response = await api.get('/admin/live-demos', {
                 headers: { 'x-access-token': token }
             });
             setLiveDemos(response.data);
@@ -386,7 +387,7 @@ const AdminDashboard = () => {
     // Handler functions for Live Demos
     const handleAddLiveDemo = async () => {
         try {
-            await axios.post('http://localhost:5000/admin/live-demos', {
+            await api.post('/admin/live-demos', {
                 title: newDemoTitle,
                 description: newDemoDescription,
                 youtube_link: newDemoYoutubeLink
@@ -415,7 +416,7 @@ const AdminDashboard = () => {
     const handleDeleteLiveDemo = async (demoId) => {
         if (window.confirm('Are you sure you want to delete this live demo?')) {
             try {
-                await axios.delete(`http://localhost:5000/admin/live-demos/${demoId}`, {
+                await api.delete(`/admin/live-demos/${demoId}`, {
                     headers: { 'x-access-token': token }
                 });
                 fetchLiveDemos(); // Re-fetch to update the list
@@ -437,7 +438,7 @@ const AdminDashboard = () => {
 
     const handleUpdateLiveDemo = async () => {
         try {
-            await axios.put(`http://localhost:5000/admin/live-demos/${editingDemoId}`, {
+            await api.put(`/admin/live-demos/${editingDemoId}`, {
                 title: editDemoTitle,
                 description: editDemoDescription,
                 youtube_link: editDemoYoutubeLink

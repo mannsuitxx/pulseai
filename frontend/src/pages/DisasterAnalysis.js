@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'; // Import useEffect
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
+import api from '../api'; // Import the centralized API
 import { useAuth } from '../contexts/AuthContext';
 import {
     Container,
@@ -32,8 +32,8 @@ const DisasterAnalysis = () => {
 
     const fetchAnalysisHistory = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/get_analysis_history', {
-                headers: { 'x-access-token': token }
+            const response = await api.get('/get_analysis_history', {
+                headers: { Authorization: `Bearer ${token}` }
             });
             setAnalysisHistory(response.data);
         } catch (error) {
@@ -61,7 +61,7 @@ const DisasterAnalysis = () => {
 
     const fetchDailyReports = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/get_daily_reports', {
+            const response = await api.get('/get_daily_reports', {
                 headers: { 'x-access-token': token }
             });
             setDailyReports(response.data);
@@ -74,7 +74,7 @@ const DisasterAnalysis = () => {
         setLoading(true);
         setAnalysisResult('');
         try {
-            const response = await axios.post('http://localhost:5000/disaster_analysis', {
+            const response = await api.post('/disaster_analysis', {
                 location,
                 disaster_type: disasterType
             }, {
@@ -84,7 +84,7 @@ const DisasterAnalysis = () => {
             setCurrentAnalysisId(analysisId); // Store the analysis ID
             
             // Fetch the actual analysis content using the analysisId
-            const analysisResponse = await axios.get(`http://localhost:5000/get_temporary_analysis/${analysisId}`, {
+            const analysisResponse = await api.get(`/get_temporary_analysis/${analysisId}`, {
                 headers: { 'x-access-token': token }
             });
             setAnalysisResult(analysisResponse.data.analysis);
@@ -92,7 +92,7 @@ const DisasterAnalysis = () => {
             // Automatically trigger download using a more reliable method
             if (analysisId) {
                 try {
-                    const downloadResponse = await axios.get(`http://localhost:5000/download_analysis/${analysisId}`, {
+                    const downloadResponse = await api.get(`/download_analysis/${analysisId}`, {
                         headers: { 'x-access-token': token },
                         responseType: 'blob' // Important: responseType must be 'blob'
                     });
@@ -121,7 +121,7 @@ const DisasterAnalysis = () => {
 
     const handleGenerateDailyReport = async () => {
         try {
-            const response = await axios.post('http://localhost:5000/generate_daily_report', {
+            const response = await api.post('/generate_daily_report', {
                 location: location || 'India', // Use current location or default
                 disaster_type: disasterType || ''
             }, {
@@ -137,7 +137,7 @@ const DisasterAnalysis = () => {
 
     const handleDeleteReport = async (reportId) => {
         try {
-            await axios.delete(`http://localhost:5000/delete_daily_report/${reportId}`, {
+            await api.delete(`/delete_daily_report/${reportId}`, {
                 headers: { 'x-access-token': token }
             });
             alert('Report deleted successfully!');

@@ -1,6 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import api from '../api'; // Import the centralized API
 import { useAuth } from '../contexts/AuthContext';
 import {
     Container,
@@ -26,7 +26,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/stats/stats', {
+                const response = await api.get('/stats/stats', {
                     headers: { 'x-access-token': token }
                 });
                 setStats(response.data);
@@ -37,8 +37,8 @@ const Dashboard = () => {
 
         const fetchLiveDemos = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/admin/live-demos-public');
-                setLiveDemos(response.data);
+                const liveDemosResponse = await api.get('/admin/live-demos-public');
+                setLiveDemos(liveDemosResponse.data);
             } catch (error) {
                 console.error('Error fetching live demos:', error);
             }
@@ -56,16 +56,16 @@ const Dashboard = () => {
 
         // Award points for watching the demo
         try {
-            const response = await axios.post('http://localhost:5000/game/watch-demo-points', {
+            const watchDemoResponse = await api.post('/game/watch-demo-points', {
                 demo_id: demo._id
             }, {
                 headers: token ? { 'x-access-token': token } : {}
             });
-            console.log(response.data.message);
-            // Optionally, show a toast notification or update user's score display
+            console.log(watchDemoResponse.data.message);
         } catch (error) {
             console.error('Error awarding points for watching demo:', error);
         }
+
     };
 
     const handleCloseModal = () => {

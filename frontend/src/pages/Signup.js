@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../api'; // Import the centralized API
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -30,7 +31,7 @@ const Signup = () => {
         e.preventDefault();
         setError('');
         try {
-            await axios.post('http://localhost:5000/request_signup_otp', { email, username });
+            await api.post('/request_signup_otp', { email, username });
             setStep(2); // Move to OTP verification step
             alert('OTP sent to your email!');
         } catch (err) {
@@ -47,7 +48,7 @@ const Signup = () => {
         e.preventDefault();
         setError('');
         try {
-            await axios.post('http://localhost:5000/verify_signup_otp', { username, password, full_name: fullName, email, otp, role }); // Pass role to backend
+            await api.post('/verify_signup_otp', { username, password, full_name: fullName, email, otp, role }); // Pass role to backend
             alert('Signup successful!');
             navigate('/login');
         } catch (err) {

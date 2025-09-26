@@ -1,4 +1,5 @@
-import React, { useState } from 'react'; // Import useState
+import React, { useState, useEffect } from 'react';
+import api, { API_URL } from '../api'; // Import the centralized API
 import { useAuth } from '../contexts/AuthContext';
 import { jwtDecode } from 'jwt-decode';
 import {
@@ -9,7 +10,7 @@ import {
     Button, // Import Button
     Avatar // Import Avatar for PFP display
 } from '@mui/material';
-import axios from 'axios'; // Import axios
+
 
 const Profile = () => {
     const { token, user } = useAuth(); // Get user from AuthContext
@@ -21,7 +22,7 @@ const Profile = () => {
     let role = user?.role || '';
     let fullName = user?.full_name || '';
     let email = user?.email || '';
-    let pfpUrl = user?.pfp_url ? `http://localhost:5000/uploads/profile_pics/${user.pfp_url}` : ''; // Construct full URL using new route
+    let pfpUrl = user?.pfp_url ? `${API_URL}/uploads/profile_pics/${user.pfp_url}` : ''; // Construct full URL using new route
 
     console.log("User object from AuthContext:", user);
     console.log("Constructed PFP URL:", pfpUrl);
@@ -52,10 +53,10 @@ const Profile = () => {
         formData.append('pfp', selectedFile);
 
         try {
-            const response = await axios.post('http://localhost:5000/upload_pfp', formData, {
+            const response = await api.post('/upload_pfp', formData, {
                 headers: {
-                    'x-access-token': token,
-                    'Content-Type': 'multipart/form-data'
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${token}`
                 }
             });
             alert(response.data.message);
