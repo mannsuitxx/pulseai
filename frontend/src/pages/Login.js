@@ -203,9 +203,6 @@ function Login() {
       <Box sx={{ my: 8 }}>
         <Paper elevation={3} sx={{ p: 4 }}>
           <Typography variant="h4" component="h1" gutterBottom color="#333333">
-            <p style={{ color: 'red', wordBreak: 'break-all' }}>
-              DEBUG: API URL is: {process.env.REACT_APP_API_URL || "NOT SET"}
-            </p>
             Login
           </Typography>
           {otpSentMessage && (
