@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Chatbot.css';
 import logo from '../logo.svg'; // Import your logo
+import api from '../api'; // Import the centralized API
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,16 +31,8 @@ const Chatbot = () => {
     setInputValue('');
 
     try {
-      const response = await fetch('http://localhost:5000/chatbot/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: inputValue }),
-      });
-
-      const data = await response.json();
-      const botMessage = { text: data.response, sender: 'bot' };
+      const response = await api.post('/chatbot/chat', { message: inputValue });
+      const botMessage = { text: response.data.response, sender: 'bot' };
       setMessages([...newMessages, botMessage]);
     } catch (error) {
       console.error('Error sending message:', error);

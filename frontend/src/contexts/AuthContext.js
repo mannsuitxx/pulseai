@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import api from '../api'; // Import the centralized API
 
 const AuthContext = createContext(null);
 
@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username_or_email, password) => {
     try {
-      const response = await axios.post('http://localhost:5000/login', { username_or_email, password });
+      const response = await api.post('/login', { username_or_email, password });
       // The backend now sends an OTP and a message, not a token directly
       return response.data;
     } catch (error) {
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
 
   const verifyOtp = async (username_or_email, otp) => {
     try {
-      const response = await axios.post('http://localhost:5000/verify_login_otp', { username_or_email, otp });
+      const response = await api.post('/verify_login_otp', { username_or_email, otp });
       localStorage.setItem('token', response.data.token);
       setToken(response.data.token); // Set token state on login
       try {
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signup = async (username, email, password) => {
-    const response = await axios.post('http://localhost:5000/api/auth/signup', { username, email, password });
+    const response = await api.post('/api/auth/signup', { username, email, password });
     localStorage.setItem('token', response.data.token);
     setToken(response.data.token); // Set token state on signup
     try {

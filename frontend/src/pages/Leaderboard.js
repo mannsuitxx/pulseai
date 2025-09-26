@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import api from '../api'; // Import the centralized API
+import { useAuth } from '../contexts/AuthContext';
 import {
     Container,
     Table,
@@ -19,7 +20,7 @@ const Leaderboard = () => {
     useEffect(() => {
         const fetchLeaderboard = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/leaderboard/leaderboard');
+                const response = await api.get('/leaderboard/leaderboard');
                 setLeaderboard(response.data);
             } catch (error) {
                 console.error('Error fetching leaderboard:', error);

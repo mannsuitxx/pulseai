@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import api from '../api'; // Import the centralized API
+import { useAuth } from '../contexts/AuthContext';
 import {
     Container,
     Typography,
@@ -36,7 +37,7 @@ const LiveDemos = () => {
         try {
             // Assuming a public endpoint for fetching live demos for users
             // If authentication is required, adjust this or create a public endpoint
-            const response = await axios.get('http://localhost:5000/admin/live-demos'); 
+            const response = await api.get('/admin/live-demos'); 
             setLiveDemos(response.data);
         } catch (error) {
             console.error('Error fetching live demos:', error);

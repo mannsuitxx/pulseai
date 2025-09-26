@@ -7,8 +7,7 @@ from auth.auth import create_token, token_required, admin_required
 from datetime import datetime
 from bson.objectid import ObjectId
 from werkzeug.utils import secure_filename
-import smtplib
-from email.mime.text import MIMEText
+from utils.email import send_email
 import random
 import time # New import
 import json # Import json
@@ -41,11 +40,7 @@ def get_live_demos():
         demo['_id'] = str(demo['_id'])
     return jsonify(live_demos)
 def send_login_alert(email, username):
-    try:
-        sender_email = current_app.config['EMAIL_ADDRESS']
-        sender_password = current_app.config['EMAIL_APP_PASSWORD']
-        
-        email_body = f"""
+    email_body = f"""
 Hello {username},
 
 This is an alert to inform you that a login to your PulseAI account occurred just now.
@@ -57,16 +52,7 @@ If you do not recognize this activity, please secure your account immediately by
 ---
 Powered by Quantum Thinkers Team
 """
-        msg = MIMEText(email_body)
-        msg['Subject'] = "PulseAI Security Alert: New Login"
-        msg['From'] = sender_email
-        msg['To'] = email
-
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-            smtp.login(sender_email, sender_password)
-            smtp.send_message(msg)
-    except Exception as e:
-        print(f"Error sending login alert: {e}")
+    send_email(email, "PulseAI Security Alert: New Login", email_body)
 
 @main_bp.route('/request_signup_otp', methods=['POST'])
 def request_signup_otp():
@@ -93,11 +79,7 @@ def request_signup_otp():
         upsert=True
     )
 
-    try:
-        sender_email = current_app.config['EMAIL_ADDRESS']
-        sender_password = current_app.config['EMAIL_APP_PASSWORD']
-        
-        email_body = f"""
+    email_body = f"""
 Hello,
 
 Welcome to PulseAI! We are excited to have you on board.
@@ -110,19 +92,12 @@ Thank you for joining our community.
 ---
 Powered by Quantum Thinkers Team
 """
-        msg = MIMEText(email_body)
-        msg['Subject'] = "Welcome to PulseAI - Your Signup OTP"
-        msg['From'] = sender_email
-        msg['To'] = email
+    success, message = send_email(email, "Welcome to PulseAI - Your Signup OTP", email_body)
 
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-            smtp.login(sender_email, sender_password)
-            smtp.send_message(msg)
-
+    if success:
         return jsonify({'message': 'OTP sent to your email'}), 200
-    except Exception as e:
-        print(f"Error sending OTP: {e}")
-        return jsonify({'message': 'Failed to send OTP.', 'error': str(e)}), 500
+    else:
+        return jsonify({'message': 'Failed to send OTP.', 'error': message}), 500
 
 @main_bp.route('/verify_signup_otp', methods=['POST'])
 def verify_signup_otp():
@@ -184,27 +159,16 @@ def login():
         upsert=True
     )
 
-    try:
-        sender_email = current_app.config['EMAIL_ADDRESS']
-        sender_password = current_app.config['EMAIL_APP_PASSWORD']
-
-        email_body = f"""Your One-Time Password (OTP) for login is: {otp}. It is valid for 5 minutes.
+    email_body = f"""Your One-Time Password (OTP) for login is: {otp}. It is valid for 5 minutes.
 
 ---
 Powered by Quantum Thinkers Team"""
-        msg = MIMEText(email_body)
-        msg['Subject'] = "PulseAI Login OTP"
-        msg['From'] = sender_email
-        msg['To'] = user['email']
+    success, message = send_email(user['email'], "PulseAI Login OTP", email_body)
 
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-            smtp.login(sender_email, sender_password)
-            smtp.send_message(msg)
-
+    if success:
         return jsonify({'message': 'OTP sent to your email. Please verify to complete login.', 'username_or_email': username_or_email}), 200
-    except Exception as e:
-        print(f"Error sending OTP: {e}")
-        return jsonify({'message': 'Failed to send OTP. Please try again.', 'error': str(e)}), 500
+    else:
+        return jsonify({'message': 'Failed to send OTP. Please try again.', 'error': message}), 500
 
 @main_bp.route('/request_login_otp', methods=['POST'])
 def request_login_otp():
@@ -227,27 +191,16 @@ def request_login_otp():
         upsert=True
     )
 
-    try:
-        sender_email = current_app.config['EMAIL_ADDRESS']
-        sender_password = current_app.config['EMAIL_APP_PASSWORD']
-        
-        email_body = f"""Your OTP for login is: {otp}. It is valid for 5 minutes.
+    email_body = f"""Your OTP for login is: {otp}. It is valid for 5 minutes.
 
 ---
 Powered by Quantum Thinkers Team"""
-        msg = MIMEText(email_body)
-        msg['Subject'] = "PulseAI Login OTP"
-        msg['From'] = sender_email
-        msg['To'] = user['email']
+    success, message = send_email(user['email'], "PulseAI Login OTP", email_body)
 
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-            smtp.login(sender_email, sender_password)
-            smtp.send_message(msg)
-
+    if success:
         return jsonify({'message': 'OTP sent to your email'}), 200
-    except Exception as e:
-        print(f"Error sending OTP: {e}")
-        return jsonify({'message': 'Failed to send OTP.', 'error': str(e)}), 500
+    else:
+        return jsonify({'message': 'Failed to send OTP.', 'error': message}), 500
 
 @main_bp.route('/verify_login_otp', methods=['POST'])
 def verify_login_otp():
@@ -298,27 +251,16 @@ def request_password_reset_otp():
         upsert=True
     )
 
-    try:
-        sender_email = current_app.config['EMAIL_ADDRESS']
-        sender_password = current_app.config['EMAIL_APP_PASSWORD']
-
-        email_body = f"""Your One-Time Password (OTP) for password reset is: {otp}. It is valid for 5 minutes.
+    email_body = f"""Your One-Time Password (OTP) for password reset is: {otp}. It is valid for 5 minutes.
 
 ---
 Powered by Quantum Thinkers Team"""
-        msg = MIMEText(email_body)
-        msg['Subject'] = "PulseAI Password Reset OTP"
-        msg['From'] = sender_email
-        msg['To'] = email
+    success, message = send_email(email, "PulseAI Password Reset OTP", email_body)
 
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-            smtp.login(sender_email, sender_password)
-            smtp.send_message(msg)
-
+    if success:
         return jsonify({'message': 'OTP sent to your email'}), 200
-    except Exception as e:
-        print(f"Error sending OTP: {e}")
-        return jsonify({'message': 'Failed to send OTP.', 'error': str(e)}), 500
+    else:
+        return jsonify({'message': 'Failed to send OTP.', 'error': message}), 500
 
 @main_bp.route('/reset_password_with_otp', methods=['POST'])
 def reset_password_with_otp():

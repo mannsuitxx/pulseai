@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api'; // Import the centralized API
 import {
     Container,
     Typography,
@@ -21,7 +21,7 @@ const Emergency = () => {
     useEffect(() => {
         const fetchResources = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/resources');
+                const response = await api.get('/resources');
                 setResources(response.data);
             } catch (error) {
                 console.error('Error fetching resources:', error);
@@ -30,8 +30,8 @@ const Emergency = () => {
 
         const fetchEmergencyContacts = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/emergency/emergency_contacts');
-                setEmergencyContacts(response.data);
+                const emergencyContactsResponse = await api.get('/emergency/emergency_contacts');
+                setEmergencyContacts(emergencyContactsResponse.data);
             } catch (error) {
                 console.error('Error fetching emergency contacts:', error);
             }
