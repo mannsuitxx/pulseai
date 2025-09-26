@@ -277,6 +277,74 @@ def verify_login_otp():
 
     return jsonify({'token': token, 'user': {'username': user['username'], 'email': user['email'], 'role': user['role'], 'full_name': user.get('full_name'), 'pfp_url': user.get('pfp_url')}}), 200
 
+@main_bp.route('/request_password_reset_otp', methods=['POST'])
+def request_password_reset_otp():
+    data = request.get_json()
+    email = data.get('email')
+
+    if not email:
+        return jsonify({'message': 'Email is required'}), 400
+
+    user = mongo.db.users.find_one({'email': email})
+    if not user:
+        return jsonify({'message': 'User with this email does not exist'}), 404
+
+    otp = str(random.randint(100000, 999999))
+    otp_expires_at = time.time() + 300  # OTP valid for 5 minutes
+
+    mongo.db.otp_codes.update_one(
+        {'email': email, 'type': 'password_reset'},
+        {'$set': {'otp': otp, 'expires_at': otp_expires_at}},
+        upsert=True
+    )
+
+    try:
+        sender_email = current_app.config['EMAIL_ADDRESS']
+        sender_password = current_app.config['EMAIL_APP_PASSWORD']
+
+        email_body = f"""Your One-Time Password (OTP) for password reset is: {otp}. It is valid for 5 minutes.
+
+---
+Powered by Quantum Thinkers Team"""
+        msg = MIMEText(email_body)
+        msg['Subject'] = "PulseAI Password Reset OTP"
+        msg['From'] = sender_email
+        msg['To'] = email
+
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(sender_email, sender_password)
+            smtp.send_message(msg)
+
+        return jsonify({'message': 'OTP sent to your email'}), 200
+    except Exception as e:
+        print(f"Error sending OTP: {e}")
+        return jsonify({'message': 'Failed to send OTP.', 'error': str(e)}), 500
+
+@main_bp.route('/reset_password_with_otp', methods=['POST'])
+def reset_password_with_otp():
+    data = request.get_json()
+    email = data.get('email')
+    otp = data.get('otp')
+    new_password = data.get('new_password')
+
+    if not email or not otp or not new_password:
+        return jsonify({'message': 'Email, OTP, and new password are required'}), 400
+
+    otp_record = mongo.db.otp_codes.find_one({'email': email, 'type': 'password_reset'})
+
+    if not otp_record or otp_record['otp'] != otp or otp_record['expires_at'] < time.time():
+        return jsonify({'message': 'Invalid or expired OTP'}), 401
+
+    hashed_password = generate_password_hash(new_password)
+    mongo.db.users.update_one(
+        {'email': email},
+        {'$set': {'password': hashed_password}}
+    )
+
+    mongo.db.otp_codes.delete_one({'_id': otp_record['_id']})
+
+    return jsonify({'message': 'Password updated successfully'}), 200
+
 @main_bp.route('/resources', methods=['GET'])
 def get_resources():
     resources = list(mongo.db.resources.find())
