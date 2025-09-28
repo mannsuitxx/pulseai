@@ -21,7 +21,6 @@ const DisasterAnalysis = () => {
     const [loading, setLoading] = useState(false);
     const [dailyReports, setDailyReports] = useState([]); // New state for daily reports
     const [timeLeft, setTimeLeft] = useState(0); // New state for countdown timer
-    const [currentAnalysisId, setCurrentAnalysisId] = useState(null); // New state to store analysis ID
     const [analysisHistory, setAnalysisHistory] = useState([]); // New state for analysis history
     const { token, user } = useAuth(); // Get user for admin check
 
@@ -81,7 +80,6 @@ const DisasterAnalysis = () => {
                 headers: { 'x-access-token': token }
             });
             const analysisId = response.data.analysis_id;
-            setCurrentAnalysisId(analysisId); // Store the analysis ID
             
             // Fetch the actual analysis content using the analysisId
             const analysisResponse = await api.get(`/get_temporary_analysis/${analysisId}`, {
