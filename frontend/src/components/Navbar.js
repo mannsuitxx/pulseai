@@ -271,7 +271,7 @@ const Navbar = () => {
                                 position: 'absolute',
                                 top: '50%',
                                 transform: 'translateY(-50%)',
-                                height: '36px', // Approximate height of the button
+                                height: indicatorStyle.height, // Dynamic height
                                 backgroundColor: 'rgba(255, 255, 255, 0.2)', // Light background for the capsule
                                 borderRadius: '9999px', // Capsule shape
                                 transition: 'all 0.3s ease-in-out',
