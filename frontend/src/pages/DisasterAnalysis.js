@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api'; // Import the centralized API
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -21,35 +21,36 @@ const DisasterAnalysis = () => {
     const [loading, setLoading] = useState(false);
     const [dailyReports, setDailyReports] = useState([]); // New state for daily reports
     const [timeLeft, setTimeLeft] = useState(0); // New state for countdown timer
+    const [currentAnalysisId, setCurrentAnalysisId] = useState(null); // New state to store analysis ID
     const [analysisHistory, setAnalysisHistory] = useState([]); // New state for analysis history
     const { token, user } = useAuth(); // Get user for admin check
 
+    const fetchDailyReports = useCallback(async () => {
+        try {
+            const response = await api.get('/get_daily_reports', {
+                headers: { 'x-access-token': token }
+            });
+            setDailyReports(response.data);
+        } catch (error) {
+            console.error('Error fetching daily reports:', error);
+        }
+    }, [token]);
+
+    const fetchAnalysisHistory = useCallback(async () => {
+        try {
+            const response = await api.get('/get_analysis_history', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setAnalysisHistory(response.data);
+        } catch (error) {
+            console.error('Error fetching analysis history:', error);
+        }
+    }, [token]);
+
     useEffect(() => {
-        const fetchDailyReports = async () => {
-            try {
-                const response = await api.get('/get_daily_reports', {
-                    headers: { 'x-access-token': token }
-                });
-                setDailyReports(response.data);
-            } catch (error) {
-                console.error('Error fetching daily reports:', error);
-            }
-        };
-
-        const fetchAnalysisHistory = async () => {
-            try {
-                const response = await api.get('/get_analysis_history', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setAnalysisHistory(response.data);
-            } catch (error) {
-                console.error('Error fetching analysis history:', error);
-            }
-        };
-
         fetchDailyReports();
         fetchAnalysisHistory(); // Fetch analysis history on component mount
-    }, [token]);
+    }, [fetchDailyReports, fetchAnalysisHistory]);
 
     useEffect(() => {
         let timer;

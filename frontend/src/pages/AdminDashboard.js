@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import api from '../api'; // Import the centralized API
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { useAuth } from '../contexts/AuthContext';
@@ -114,6 +114,28 @@ const AdminDashboard = () => {
     setSelectAllDisasters(!selectAllDisasters);
   };
 
+    const fetchLiveDemos = useCallback(async () => {
+        try {
+            const response = await api.get('/admin/live-demos', {
+                headers: { 'x-access-token': token }
+            });
+            setLiveDemos(response.data);
+        } catch (error) {
+            console.error('Error fetching live demos:', error);
+        }
+    }, [token]);
+
+    const fetchEmergencyContacts = useCallback(async () => {
+        try {
+            const response = await api.get('/emergency/emergency_contacts', {
+                headers: { 'x-access-token': token }
+            });
+            setEmergencyContacts(response.data);
+        } catch (error) {
+            console.error('Error fetching emergency contacts:', error);
+        }
+    }, [token]);
+
     useEffect(() => {
         if (!loggedInUser || loggedInUser.role !== 'admin') {
             navigate('/');
@@ -152,28 +174,6 @@ const AdminDashboard = () => {
             }
         };
 
-        const fetchEmergencyContacts = async () => {
-            try {
-                const response = await api.get('/emergency/emergency_contacts', {
-                    headers: { 'x-access-token': token }
-                });
-                setEmergencyContacts(response.data);
-            } catch (error) {
-                console.error('Error fetching emergency contacts:', error);
-            }
-        };
-
-        const fetchLiveDemos = async () => {
-            try {
-                const response = await api.get('/admin/live-demos', {
-                    headers: { 'x-access-token': token }
-                });
-                setLiveDemos(response.data);
-            } catch (error) {
-                console.error('Error fetching live demos:', error);
-            }
-        };
-
         if (token && loggedInUser && loggedInUser.role === 'admin') {
             fetchUsers();
             fetchQuestions();
@@ -181,7 +181,7 @@ const AdminDashboard = () => {
             fetchEmergencyContacts();
             fetchLiveDemos();
         }
-    }, [token, loggedInUser, navigate]);
+    }, [token, loggedInUser, navigate, fetchEmergencyContacts, fetchLiveDemos]);
 
     const deleteUser = async (userId) => {
         try {
