@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../api'; // Import the centralized API
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -21,14 +21,13 @@ const DisasterAnalysis = () => {
     const [loading, setLoading] = useState(false);
     const [dailyReports, setDailyReports] = useState([]); // New state for daily reports
     const [timeLeft, setTimeLeft] = useState(0); // New state for countdown timer
-    const [currentAnalysisId, setCurrentAnalysisId] = useState(null); // New state to store analysis ID
     const [analysisHistory, setAnalysisHistory] = useState([]); // New state for analysis history
     const { token, user } = useAuth(); // Get user for admin check
 
     useEffect(() => {
         fetchDailyReports();
         fetchAnalysisHistory(); // Fetch analysis history on component mount
-    }, [token]); // Fetch daily reports and analysis history on component mount or token change
+    }, [token, fetchDailyReports, fetchAnalysisHistory]); // Fetch daily reports and analysis history on component mount or token change
 
     const fetchAnalysisHistory = async () => {
         try {

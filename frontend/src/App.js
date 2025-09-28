@@ -1,25 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import PrivateRoute from './components/PrivateRoute';
-import AdminRoute from './components/AdminRoute';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import theme from './theme';
-import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import Emergency from './pages/Emergency';
-import Games from './pages/Games';
-import VirtualDrills from './pages/VirtualDrills';
-import Profile from './pages/Profile';
-import Leaderboard from './pages/Leaderboard';
-import DisasterAnalysis from './pages/DisasterAnalysis';
-import DisasterVisualGame from './pages/DisasterVisualGame';
+import { BrowserRouter as Router } from 'react-router-dom';
 import AnimatedRoutes from './components/AnimatedRoutes'; // Import the new component
 import Chatbot from './components/Chatbot';
 import './App.css'; // Import the CSS for animations

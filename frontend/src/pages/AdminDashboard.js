@@ -41,15 +41,12 @@ const AdminDashboard = () => {
     const [geminiNumQuestions, setGeminiNumQuestions] = useState(5); // State for number of Gemini questions
     const navigate = useNavigate();
 
-    const [quizData, setQuizData] = useState([]);
     const [disasterData, setDisasterData] = useState([]);
     const [emergencyContacts, setEmergencyContacts] = useState([]);
     const [newContact, setNewContact] = useState({ name: '', phone: '', contact_type: '', location: '' });
     const [editingContact, setEditingContact] = useState(null);
     const [editedContactData, setEditedContactData] = useState({ name: '', phone: '', contact_type: '', location: '' });
 
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [selectedQuizzes, setSelectedQuizzes] = useState([]);
     const [selectAllQuizzes, setSelectAllQuizzes] = useState(false);
     const [selectedDisasters, setSelectedDisasters] = useState([]);
@@ -173,7 +170,7 @@ const AdminDashboard = () => {
             fetchEmergencyContacts();
             fetchLiveDemos();
         }
-    }, [token, loggedInUser, navigate]);
+    }, [token, loggedInUser, navigate, fetchEmergencyContacts, fetchLiveDemos]);
 
     const deleteUser = async (userId) => {
         try {

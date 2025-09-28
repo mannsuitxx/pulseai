@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import api, { API_URL } from '../api'; // Import the centralized API
 import { useAuth } from '../contexts/AuthContext';
 import { jwtDecode } from 'jwt-decode';

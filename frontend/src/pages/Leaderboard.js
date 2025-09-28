@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api'; // Import the centralized API
-import { useAuth } from '../contexts/AuthContext';
 import {
     Container,
     Table,

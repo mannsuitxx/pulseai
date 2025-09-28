@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import api from '../api'; // Import the centralized API
-import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
     Container,
