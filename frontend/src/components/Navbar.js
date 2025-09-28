@@ -264,7 +264,7 @@ const Navbar = () => {
                         <MenuIcon />
                     </IconButton>
                 ) : (
-                    <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'relative' }} ref={navLinksRef}>
+                    <Box sx={{ display: { xs: 'none', lg: 'block' }, position: 'relative' }} ref={navLinksRef}>
                         {/* Moving Indicator Box */}
                         <Box
                             sx={{
@@ -314,7 +314,7 @@ const Navbar = () => {
                         keepMounted: true,
                     }}
                     sx={{
-                        display: { xs: 'block', md: 'none' },
+                        display: { xs: 'block', lg: 'none' },
                         '& .MuiDrawer-paper': {
                             boxSizing: 'border-box',
                             width: 240,
