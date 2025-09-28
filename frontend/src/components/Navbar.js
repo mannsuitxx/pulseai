@@ -36,7 +36,7 @@ const Navbar = () => {
     };
 
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
 
     const getLinkStyle = (path) => ({
         color: '#FFFFFF',
