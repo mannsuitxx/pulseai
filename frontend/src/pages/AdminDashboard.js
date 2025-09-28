@@ -114,17 +114,6 @@ const AdminDashboard = () => {
     setSelectAllDisasters(!selectAllDisasters);
   };
 
-    const fetchEmergencyContacts = async () => {
-        try {
-            const response = await api.get('/emergency/emergency_contacts', {
-                headers: { 'x-access-token': token }
-            });
-            setEmergencyContacts(response.data);
-        } catch (error) {
-            console.error('Error fetching emergency contacts:', error);
-        }
-    };
-
     useEffect(() => {
         if (!loggedInUser || loggedInUser.role !== 'admin') {
             navigate('/');
@@ -163,6 +152,28 @@ const AdminDashboard = () => {
             }
         };
 
+        const fetchEmergencyContacts = async () => {
+            try {
+                const response = await api.get('/emergency/emergency_contacts', {
+                    headers: { 'x-access-token': token }
+                });
+                setEmergencyContacts(response.data);
+            } catch (error) {
+                console.error('Error fetching emergency contacts:', error);
+            }
+        };
+
+        const fetchLiveDemos = async () => {
+            try {
+                const response = await api.get('/admin/live-demos', {
+                    headers: { 'x-access-token': token }
+                });
+                setLiveDemos(response.data);
+            } catch (error) {
+                console.error('Error fetching live demos:', error);
+            }
+        };
+
         if (token && loggedInUser && loggedInUser.role === 'admin') {
             fetchUsers();
             fetchQuestions();
@@ -170,7 +181,7 @@ const AdminDashboard = () => {
             fetchEmergencyContacts();
             fetchLiveDemos();
         }
-    }, [token, loggedInUser, navigate, fetchEmergencyContacts, fetchLiveDemos]);
+    }, [token, loggedInUser, navigate]);
 
     const deleteUser = async (userId) => {
         try {
@@ -364,17 +375,6 @@ const AdminDashboard = () => {
     const handleCancelEditContact = () => {
         setEditingContact(null);
         setEditedContactData({ name: '', phone: '', contact_type: '', location: '' });
-    };
-
-    const fetchLiveDemos = async () => {
-        try {
-            const response = await api.get('/admin/live-demos', {
-                headers: { 'x-access-token': token }
-            });
-            setLiveDemos(response.data);
-        } catch (error) {
-            console.error('Error fetching live demos:', error);
-        }
     };
 
     const handleTabChange = (event, newValue) => {
