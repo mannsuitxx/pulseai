@@ -3,6 +3,7 @@ services:
     name: pulse-ai-frontend
     env: node
     plan: free
-    buildCommand: cd frontend && npm install && npm run build
+    root: frontend
+    buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /health
