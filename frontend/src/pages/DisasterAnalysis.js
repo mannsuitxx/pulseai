@@ -21,6 +21,7 @@ const DisasterAnalysis = () => {
     const [loading, setLoading] = useState(false);
     const [dailyReports, setDailyReports] = useState([]); // New state for daily reports
     const [timeLeft, setTimeLeft] = useState(0); // New state for countdown timer
+    const [currentAnalysisId, setCurrentAnalysisId] = useState(null); // New state to store analysis ID
     const [analysisHistory, setAnalysisHistory] = useState([]); // New state for analysis history
     const { token, user } = useAuth(); // Get user for admin check
 
