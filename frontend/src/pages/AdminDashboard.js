@@ -225,7 +225,7 @@ const AdminDashboard = () => {
     const handleDeleteDisaster = async (disasterId) => {
         if (window.confirm('Are you sure you want to delete this disaster entry?')) {
             try {
-                await api.delete(`/delete_daily_report/${disasterId}`, {
+                await api.delete(`/admin/disasters/${disasterId}`, {
                     headers: { 'x-access-token': token }
                 });
                 setDisasterData(disasterData.filter(disaster => disaster._id !== disasterId));
@@ -464,7 +464,7 @@ const AdminDashboard = () => {
                             Admin Dashboard
                         </Typography>
                         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                            <Tabs value={tab} onChange={handleTabChange} textColor="inherit" indicatorColor="secondary">
+                            <Tabs value={tab} onChange={handleTabChange} textColor="inherit" indicatorColor="secondary" variant="scrollable" scrollButtons="auto">
                                 <Tab label="Users" sx={{ color: '#FFFFFF' }} />
                                 <Tab label="Game Questions" sx={{ color: '#FFFFFF' }} />
                                 <Tab label="Disaster Analysis" sx={{ color: '#FFFFFF' }} />

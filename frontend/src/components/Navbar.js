@@ -104,7 +104,7 @@ const Navbar = () => {
                     display: 'inline-block',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease-in-out',
-                    fontSize: isHoveringPulseAI ? '1.75rem' : '2.1rem',
+                    fontSize: isHoveringPulseAI ? '1.6rem' : '1.8rem',
                 }}
                 onMouseEnter={() => setIsHoveringPulseAI(true)}
                 onMouseLeave={() => setIsHoveringPulseAI(false)}
@@ -125,8 +125,8 @@ const Navbar = () => {
                     variant="caption"
                     sx={{
                         display: 'block',
-                        color: 'rgba(0, 0, 0, 0.7)',
-                        fontSize: '0.8rem',
+                        color: 'rgba(0, 0, 0, 0.8)',
+                        fontSize: '0.9rem',
                         fontWeight: 'normal',
                         marginTop: '-5px',
                     }}
@@ -210,19 +210,18 @@ const Navbar = () => {
 
     return (
         <AppBar position="static">
-            <Toolbar sx={{ alignItems: 'center' }}>
+            <Toolbar sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box
                     component={Link}
                     to="/"
                     sx={{
-                        flexGrow: 1,
                         textDecoration: 'none',
                         color: 'inherit',
                         position: 'relative',
                         display: 'inline-block',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease-in-out',
-                        fontSize: isHoveringPulseAI ? '1.75rem' : '2.1rem',
+                        fontSize: isHoveringPulseAI ? '1.6rem' : '1.8rem',
                     }}
                     onMouseEnter={() => setIsHoveringPulseAI(true)}
                     onMouseLeave={() => setIsHoveringPulseAI(false)}

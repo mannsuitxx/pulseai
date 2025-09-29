@@ -568,3 +568,117 @@ def update_user_role(current_user, user_id):
     except Exception as e:
         print(f"Error updating user role: {e}")
         return jsonify({'message': 'Error updating user role', 'error': str(e)}), 500
+
+@main_bp.route('/update_profile', methods=['PUT'])
+@token_required
+def update_profile(current_user):
+    data = request.get_json()
+    full_name = data.get('full_name')
+    email = data.get('email')
+    otp = data.get('otp')
+
+    update_fields = {}
+    if full_name:
+        update_fields['full_name'] = full_name
+
+    if email and email != current_user['email']:
+        if not otp:
+            return jsonify({'message': 'OTP is required to change email'}), 400
+        
+        otp_record = mongo.db.otp_codes.find_one({'new_email': email, 'type': 'email_change', 'user_id': str(current_user['_id'])})
+
+        if not otp_record or otp_record['otp'] != otp or otp_record['expires_at'] < time.time():
+            return jsonify({'message': 'Invalid or expired OTP'}), 401
+        
+        update_fields['email'] = email
+        mongo.db.otp_codes.delete_one({'_id': otp_record['_id']})
+
+    if not update_fields:
+        return jsonify({'message': 'No fields to update'}), 400
+
+    mongo.db.users.update_one({'_id': current_user['_id']}, {'$set': update_fields})
+    
+    updated_user = mongo.db.users.find_one({'_id': current_user['_id']})
+    updated_user.pop('password', None) # Don't send password back
+    updated_user['_id'] = str(updated_user['_id'])
+
+
+    return jsonify({'message': 'Profile updated successfully', 'user': updated_user}), 200
+
+@main_bp.route('/request_email_change_otp', methods=['POST'])
+@token_required
+def request_email_change_otp(current_user):
+    data = request.get_json()
+    new_email = data.get('new_email')
+
+    if not new_email:
+        return jsonify({'message': 'New email is required'}), 400
+
+    if mongo.db.users.find_one({'email': new_email}):
+        return jsonify({'message': 'This email is already in use.'}), 409
+
+    otp = str(random.randint(100000, 999999))
+    otp_expires_at = time.time() + 300  # 5 minutes
+
+    mongo.db.otp_codes.update_one(
+        {'user_id': str(current_user['_id']), 'type': 'email_change'},
+        {'$set': {'otp': otp, 'expires_at': otp_expires_at, 'new_email': new_email}},
+        upsert=True
+    )
+
+    email_body = f"Your OTP to change your email address is: {otp}. It is valid for 5 minutes."
+    success, message = send_email(new_email, "PulseAI - Change Email OTP", email_body)
+
+    if success:
+        return jsonify({'message': 'OTP sent to your new email address'}), 200
+    else:
+        return jsonify({'message': 'Failed to send OTP.', 'error': message}), 500
+
+@main_bp.route('/change_password', methods=['POST'])
+@token_required
+def change_password(current_user):
+    data = request.get_json()
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+    otp = data.get('otp')
+
+    if not current_password or not new_password or not otp:
+        return jsonify({'message': 'Current password, new password, and OTP are required'}), 400
+
+    if not check_password_hash(current_user['password'], current_password):
+        return jsonify({'message': 'Invalid current password'}), 401
+
+    otp_record = mongo.db.otp_codes.find_one({'user_id': str(current_user['_id']), 'type': 'password_change'})
+
+    if not otp_record or otp_record['otp'] != otp or otp_record['expires_at'] < time.time():
+        return jsonify({'message': 'Invalid or expired OTP'}), 401
+
+    hashed_password = generate_password_hash(new_password)
+    mongo.db.users.update_one(
+        {'_id': current_user['_id']},
+        {'$set': {'password': hashed_password}}
+    )
+
+    mongo.db.otp_codes.delete_one({'_id': otp_record['_id']})
+
+    return jsonify({'message': 'Password changed successfully'}), 200
+
+@main_bp.route('/request_password_change_otp', methods=['POST'])
+@token_required
+def request_password_change_otp(current_user):
+    otp = str(random.randint(100000, 999999))
+    otp_expires_at = time.time() + 300  # 5 minutes
+
+    mongo.db.otp_codes.update_one(
+        {'user_id': str(current_user['_id']), 'type': 'password_change'},
+        {'$set': {'otp': otp, 'expires_at': otp_expires_at}},
+        upsert=True
+    )
+
+    email_body = f"Your OTP for changing your password is: {otp}. It is valid for 5 minutes."
+    success, message = send_email(current_user['email'], "PulseAI - Change Password OTP", email_body)
+
+    if success:
+        return jsonify({'message': 'OTP sent to your email'}), 200
+    else:
+        return jsonify({'message': 'Failed to send OTP.', 'error': message}), 500
