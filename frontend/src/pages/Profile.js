@@ -119,6 +119,7 @@ const Profile = () => {
             const response = await api.put('/update_profile', payload, {
                 headers: { 'x-access-token': token }
             });
+            console.log('Response from /update_profile:', response);
             setUser(response.data.user);
             setSuccess('Profile updated successfully!');
             setIsEditMode(false);
