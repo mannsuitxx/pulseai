@@ -584,7 +584,7 @@ def update_profile(current_user):
     update_fields = {}
     alert_subject = None
 
-    if 'full_name' in data and data['full_name'] != current_user.get('full_name'):
+    if 'full_name' in data:
         update_fields['full_name'] = data['full_name']
 
     if email and email != current_user['email']:
