@@ -90,14 +90,12 @@ const Profile = () => {
 
         try {
             // Handle PFP upload first if a new file is selected
-            let pfp_url = user.pfp_url;
             if (selectedFile) {
                 const formData = new FormData();
                 formData.append('pfp', selectedFile);
-                const pfpResponse = await api.post('/upload_pfp', formData, {
+                await api.post('/upload_pfp', formData, {
                     headers: { 'x-access-token': token, 'Content-Type': 'multipart/form-data' }
                 });
-                pfp_url = pfpResponse.data.pfp_url;
             }
 
             // Then, update the rest of the profile information
