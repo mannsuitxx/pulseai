@@ -31,7 +31,6 @@ const Profile = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [otp, setOtp] = useState('');
-    const [otpSent, setOtpSent] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -72,7 +71,6 @@ const Profile = () => {
             setSuccess('Profile updated successfully!');
             setIsEditMode(false);
             setOtp('');
-            setOtpSent(false);
         } catch (err) {
             setError(err.response?.data?.message || 'An error occurred while updating the profile.');
         } finally {
@@ -91,7 +89,6 @@ const Profile = () => {
             await api.post('/request_email_change_otp', { new_email: email }, {
                 headers: { 'x-access-token': token }
             });
-            setOtpSent(true);
             setSuccess('An OTP has been sent to your new email address.');
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to send OTP.');
@@ -127,7 +124,6 @@ const Profile = () => {
             setNewPassword('');
             setConfirmPassword('');
             setOtp('');
-            setOtpSent(false);
         } catch (err) {
             setError(err.response?.data?.message || 'An error occurred while changing the password.');
         } finally {
@@ -142,7 +138,6 @@ const Profile = () => {
             await api.post('/request_password_change_otp', {}, {
                 headers: { 'x-access-token': token }
             });
-            setOtpSent(true);
             setSuccess('An OTP has been sent to your email.');
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to send OTP.');
