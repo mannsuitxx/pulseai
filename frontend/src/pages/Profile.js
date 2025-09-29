@@ -40,7 +40,8 @@ const Profile = () => {
 
     // OTP and status fields
     const [otp, setOtp] = useState('');
-    const [otpSent, setOtpSent] = useState(false);
+    const [isOtpRequired, setIsOtpRequired] = useState(false);
+    const [isPasswordOtpRequired, setIsPasswordOtpRequired] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -59,7 +60,8 @@ const Profile = () => {
         setError('');
         setSuccess('');
         setShowChangePassword(false);
-        setOtpSent(false);
+        setIsOtpRequired(false);
+        setIsPasswordOtpRequired(false);
         setOtp('');
         if (isEditMode) {
             setFullName(user?.full_name || '');
@@ -90,7 +92,7 @@ const Profile = () => {
             return;
         }
 
-        if ((email !== user.email || username !== user.username) && !otpSent) {
+        if ((email !== user.email || username !== user.username) && !isOtpRequired) {
             await handleRequestUpdateOtp();
             return;
         }
@@ -121,7 +123,7 @@ const Profile = () => {
             setSuccess('Profile updated successfully!');
             setIsEditMode(false);
             setOtp('');
-            setOtpSent(false);
+            setIsOtpRequired(false);
             setSelectedFile(null);
         } catch (err) {
             setError(err.response?.data?.message || 'An error occurred while updating the profile.');
@@ -138,7 +140,7 @@ const Profile = () => {
                 headers: { 'x-access-token': token }
             });
             setSuccess('An OTP has been sent to your email address. Please enter it to save your changes.');
-            setOtpSent(true);
+            setIsOtpRequired(true);
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to send OTP.');
         } finally {
@@ -152,7 +154,7 @@ const Profile = () => {
             return;
         }
         
-        if (!otpSent) {
+        if (!isPasswordOtpRequired) {
             await handleRequestPasswordOtp();
             return;
         }
@@ -179,7 +181,7 @@ const Profile = () => {
             setNewPassword('');
             setConfirmPassword('');
             setOtp('');
-            setOtpSent(false);
+            setIsPasswordOtpRequired(false);
             setShowChangePassword(false);
         } catch (err) {
             setError(err.response?.data?.message || 'An error occurred while changing the password.');
@@ -196,7 +198,7 @@ const Profile = () => {
                 headers: { 'x-access-token': token }
             });
             setSuccess('An OTP has been sent to your email. Please enter it to change your password.');
-            setOtpSent(true);
+            setIsPasswordOtpRequired(true);
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to send OTP.');
         } finally {
@@ -230,7 +232,7 @@ const Profile = () => {
                         <TextField label="Role" fullWidth value={user?.role || ''} disabled variant="filled" />
                     </Box>
 
-                    <Collapse in={isEditMode && (email !== user.email || username !== user.username)}>
+                    <Collapse in={isEditMode && isOtpRequired}>
                         <Box sx={{ my: 2 }}>
                             <TextField label="Enter OTP" fullWidth value={otp} onChange={(e) => setOtp(e.target.value)} />
                         </Box>
@@ -248,11 +250,11 @@ const Profile = () => {
                                     <TextField label="Current Password" type={showPassword ? 'text' : 'password'} fullWidth value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 2 }} InputProps={{ endAdornment: ( <InputAdornment position="end"> <IconButton onClick={() => setShowPassword(!showPassword)} edge="end"> {showPassword ? <VisibilityOff /> : <Visibility />} </IconButton> </InputAdornment> ), }} />
                                     <TextField label="New Password" type={showNewPassword ? 'text' : 'password'} fullWidth value={newPassword} onChange={(e) => setNewPassword(e.target.value)} sx={{ mb: 2 }} InputProps={{ endAdornment: ( <InputAdornment position="end"> <IconButton onClick={() => setShowNewPassword(!showNewPassword)} edge="end"> {showNewPassword ? <VisibilityOff /> : <Visibility />} </IconButton> </InputAdornment> ), }} />
                                     <TextField label="Confirm New Password" type={showConfirmPassword ? 'text' : 'password'} fullWidth value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} sx={{ mb: 2 }} InputProps={{ endAdornment: ( <InputAdornment position="end"> <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end"> {showConfirmPassword ? <VisibilityOff /> : <Visibility />} </IconButton> </InputAdornment> ), }} />
-                                    <Collapse in={otpSent && showChangePassword}>
+                                    <Collapse in={isPasswordOtpRequired}>
                                         <TextField label="Enter OTP" fullWidth value={otp} onChange={(e) => setOtp(e.target.value)} sx={{ my: 2 }} />
                                     </Collapse>
                                     <Button variant="contained" color="primary" onClick={handleChangePassword} disabled={loading} fullWidth>
-                                        {loading ? <CircularProgress size={24} /> : (otpSent ? 'Confirm Change' : 'Change Password')}
+                                        {loading ? <CircularProgress size={24} /> : (isPasswordOtpRequired ? 'Confirm Change' : 'Change Password')}
                                     </Button>
                                 </Box>
                             </Collapse>
