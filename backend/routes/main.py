@@ -529,6 +529,9 @@ def upload_pfp(current_user):
             {'_id': current_user['_id']},
             {'$set': {'pfp_url': unique_filename}}
         )
+        
+        send_email(current_user['email'], "PulseAI Security Alert: Profile Picture Updated", f"Hello {current_user['username']},\n\nThis is to confirm that your profile picture has been successfully updated.\n\nIf you did not make this change, please contact our support team immediately.")
+
         return jsonify({'message': 'Profile picture uploaded successfully!', 'pfp_url': unique_filename}), 200
     return jsonify({'message': 'File upload failed'}), 500
 
@@ -575,23 +578,46 @@ def update_profile(current_user):
     data = request.get_json()
     full_name = data.get('full_name')
     email = data.get('email')
+    username = data.get('username')
     otp = data.get('otp')
 
     update_fields = {}
-    if full_name:
+    alert_subject = None
+
+    if full_name and full_name != current_user.get('full_name'):
         update_fields['full_name'] = full_name
 
     if email and email != current_user['email']:
         if not otp:
             return jsonify({'message': 'OTP is required to change email'}), 400
         
-        otp_record = mongo.db.otp_codes.find_one({'new_email': email, 'type': 'email_change', 'user_id': str(current_user['_id'])})
+        otp_record = mongo.db.otp_codes.find_one({'new_email': email, 'type': 'update_profile', 'user_id': str(current_user['_id'])})
 
         if not otp_record or otp_record['otp'] != otp or otp_record['expires_at'] < time.time():
-            return jsonify({'message': 'Invalid or expired OTP'}), 401
+            return jsonify({'message': 'Invalid or expired OTP for email change'}), 401
         
+        if mongo.db.users.find_one({'email': email}):
+            return jsonify({'message': 'Email already in use'}), 409
+
         update_fields['email'] = email
         mongo.db.otp_codes.delete_one({'_id': otp_record['_id']})
+        alert_subject = "Email Address Updated"
+
+    if username and username != current_user['username']:
+        if not otp:
+            return jsonify({'message': 'OTP is required to change username'}), 400
+
+        otp_record = mongo.db.otp_codes.find_one({'new_username': username, 'type': 'update_profile', 'user_id': str(current_user['_id'])})
+
+        if not otp_record or otp_record['otp'] != otp or otp_record['expires_at'] < time.time():
+            return jsonify({'message': 'Invalid or expired OTP for username change'}), 401
+
+        if mongo.db.users.find_one({'username': username}):
+            return jsonify({'message': 'Username already in use'}), 409
+
+        update_fields['username'] = username
+        mongo.db.otp_codes.delete_one({'_id': otp_record['_id']})
+        alert_subject = "Username Updated"
 
     if not update_fields:
         return jsonify({'message': 'No fields to update'}), 400
@@ -599,38 +625,43 @@ def update_profile(current_user):
     mongo.db.users.update_one({'_id': current_user['_id']}, {'$set': update_fields})
     
     updated_user = mongo.db.users.find_one({'_id': current_user['_id']})
-    updated_user.pop('password', None) # Don't send password back
+    updated_user.pop('password', None)
     updated_user['_id'] = str(updated_user['_id'])
 
+    if alert_subject:
+        send_email(updated_user['email'], f"PulseAI Security Alert: {alert_subject}", f"Hello {updated_user['username']},\n\nThis is to confirm that your {alert_subject.lower()} has been successfully updated.\n\nIf you did not make this change, please contact our support team immediately.")
 
     return jsonify({'message': 'Profile updated successfully', 'user': updated_user}), 200
 
-@main_bp.route('/request_email_change_otp', methods=['POST'])
+@main_bp.route('/request_update_otp', methods=['POST'])
 @token_required
-def request_email_change_otp(current_user):
+def request_update_otp(current_user):
     data = request.get_json()
     new_email = data.get('new_email')
+    new_username = data.get('new_username')
 
-    if not new_email:
-        return jsonify({'message': 'New email is required'}), 400
+    if new_email and new_email != current_user['email']:
+        if mongo.db.users.find_one({'email': new_email}):
+            return jsonify({'message': 'This email is already in use.'}), 409
 
-    if mongo.db.users.find_one({'email': new_email}):
-        return jsonify({'message': 'This email is already in use.'}), 409
+    if new_username and new_username != current_user['username']:
+        if mongo.db.users.find_one({'username': new_username}):
+            return jsonify({'message': 'This username is already in use.'}), 409
 
     otp = str(random.randint(100000, 999999))
     otp_expires_at = time.time() + 300  # 5 minutes
 
     mongo.db.otp_codes.update_one(
-        {'user_id': str(current_user['_id']), 'type': 'email_change'},
-        {'$set': {'otp': otp, 'expires_at': otp_expires_at, 'new_email': new_email}},
+        {'user_id': str(current_user['_id']), 'type': 'update_profile'},
+        {'$set': {'otp': otp, 'expires_at': otp_expires_at, 'new_email': new_email, 'new_username': new_username}},
         upsert=True
     )
 
-    email_body = f"Your OTP to change your email address is: {otp}. It is valid for 5 minutes."
-    success, message = send_email(new_email, "PulseAI - Change Email OTP", email_body)
+    email_body = f"Your OTP to update your profile is: {otp}. It is valid for 5 minutes."
+    success, message = send_email(current_user['email'], "PulseAI - Update Profile OTP", email_body)
 
     if success:
-        return jsonify({'message': 'OTP sent to your new email address'}), 200
+        return jsonify({'message': 'OTP sent to your email'}), 200
     else:
         return jsonify({'message': 'Failed to send OTP.', 'error': message}), 500
 
@@ -660,6 +691,8 @@ def change_password(current_user):
     )
 
     mongo.db.otp_codes.delete_one({'_id': otp_record['_id']})
+
+    send_email(current_user['email'], "PulseAI Security Alert: Password Changed", f"Hello {current_user['username']},\n\nThis is to confirm that your password has been successfully changed.\n\nIf you did not make this change, please contact our support team immediately.")
 
     return jsonify({'message': 'Password changed successfully'}), 200
 
