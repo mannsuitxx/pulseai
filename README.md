@@ -1,6 +1,6 @@
 # PULSE AI  PULSE AI: Punjab Unified Life Safety & Emergency AI
 
-![License](https://img.shields.io/badge/License-MIT-blue.svg) [![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR_SITE_ID/deploy-status)](https://app.netlify.com/sites/YOUR_SITE_NAME/deploys)
+![License](https://img.shields.io/badge/License-MIT-blue.svg) [![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR_SITE_ID/deploy-status)](https://app.netlify.com/sites/pulseai-wb/deploys)
 
 > A web application for disaster management and emergency response, designed to provide real-time information, educational resources, and interactive tools to help users prepare for and respond to emergencies.
 
@@ -29,7 +29,7 @@
 
 ### Backend
 
-*   [Flask](https://flask.palletsproject.com/)
+*   [Flask](https://flask.palletsprodict.com/)
 *   [MongoDB](https://www.mongodb.com/)
 *   [JWT](https://jwt.io/)
 *   [Google Gemini API](https://ai.google.dev/)
