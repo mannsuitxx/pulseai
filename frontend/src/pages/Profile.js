@@ -12,7 +12,8 @@ import {
     IconButton,
     InputAdornment,
     CircularProgress,
-    Collapse
+    Collapse,
+    Divider
 } from '@mui/material';
 import { Visibility, VisibilityOff, Edit } from '@mui/icons-material';
 import './Profile.css';
@@ -29,6 +30,7 @@ const Profile = () => {
     const [selectedFile, setSelectedFile] = useState(null);
 
     // Password change fields
+    const [showChangePassword, setShowChangePassword] = useState(false);
     const [password, setPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -38,6 +40,7 @@ const Profile = () => {
 
     // OTP and status fields
     const [otp, setOtp] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -55,12 +58,15 @@ const Profile = () => {
         setIsEditMode(!isEditMode);
         setError('');
         setSuccess('');
-        // Reset fields to original values if canceling edit
+        setShowChangePassword(false);
+        setOtpSent(false);
+        setOtp('');
         if (isEditMode) {
             setFullName(user?.full_name || '');
             setEmail(user?.email || '');
             setUsername(user?.username || '');
             setSelectedFile(null);
+            setPfpUrl(user?.pfp_url ? `${API_URL}/uploads/profile_pics/${user.pfp_url}` : '');
         }
     };
 
@@ -74,13 +80,13 @@ const Profile = () => {
         const file = event.target.files[0];
         if (file) {
             setSelectedFile(file);
-            setPfpUrl(URL.createObjectURL(file)); // Show preview
+            setPfpUrl(URL.createObjectURL(file));
         }
     };
 
     const handleUpdateProfile = async () => {
-        if ((email !== user.email || username !== user.username) && !otp) {
-            setError("Please enter the OTP sent to your email address.");
+        if ((email !== user.email || username !== user.username) && !otpSent) {
+            await handleRequestUpdateOtp();
             return;
         }
 
@@ -89,7 +95,6 @@ const Profile = () => {
         setSuccess('');
 
         try {
-            // Handle PFP upload first if a new file is selected
             if (selectedFile) {
                 const formData = new FormData();
                 formData.append('pfp', selectedFile);
@@ -98,12 +103,11 @@ const Profile = () => {
                 });
             }
 
-            // Then, update the rest of the profile information
             const payload = {
                 full_name: fullName,
                 email: email,
                 username: username,
-                otp: (email !== user.email || username !== user.username) ? otp : undefined
+                otp: otp || undefined
             };
             const response = await api.put('/update_profile', payload, {
                 headers: { 'x-access-token': token }
@@ -112,6 +116,7 @@ const Profile = () => {
             setSuccess('Profile updated successfully!');
             setIsEditMode(false);
             setOtp('');
+            setOtpSent(false);
             setSelectedFile(null);
         } catch (err) {
             setError(err.response?.data?.message || 'An error occurred while updating the profile.');
@@ -127,7 +132,8 @@ const Profile = () => {
             await api.post('/request_update_otp', { new_email: email, new_username: username }, {
                 headers: { 'x-access-token': token }
             });
-            setSuccess('An OTP has been sent to your email address.');
+            setSuccess('An OTP has been sent to your email address. Please enter it to save your changes.');
+            setOtpSent(true);
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to send OTP.');
         } finally {
@@ -140,6 +146,12 @@ const Profile = () => {
             setError("New passwords do not match.");
             return;
         }
+        
+        if (!otpSent) {
+            await handleRequestPasswordOtp();
+            return;
+        }
+
         if (!otp) {
             setError("Please enter the OTP sent to your email.");
             return;
@@ -162,6 +174,8 @@ const Profile = () => {
             setNewPassword('');
             setConfirmPassword('');
             setOtp('');
+            setOtpSent(false);
+            setShowChangePassword(false);
         } catch (err) {
             setError(err.response?.data?.message || 'An error occurred while changing the password.');
         } finally {
@@ -176,7 +190,8 @@ const Profile = () => {
             await api.post('/request_password_change_otp', {}, {
                 headers: { 'x-access-token': token }
             });
-            setSuccess('An OTP has been sent to your email.');
+            setSuccess('An OTP has been sent to your email. Please enter it to change your password.');
+            setOtpSent(true);
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to send OTP.');
         } finally {
@@ -197,38 +212,10 @@ const Profile = () => {
 
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
                         <Box sx={{ position: 'relative' }}>
-                            <Avatar 
-                                src={pfpUrl} 
-                                sx={{ 
-                                    width: 120, 
-                                    height: 120, 
-                                    mb: 2, 
-                                    border: '2px solid #1976d2',
-                                    cursor: isEditMode ? 'pointer' : 'default'
-                                }}
-                                onClick={handlePfpClick}
-                            />
-                            {isEditMode && (
-                                <IconButton 
-                                    sx={{ 
-                                        position: 'absolute', 
-                                        bottom: 10, 
-                                        right: 10, 
-                                        backgroundColor: 'rgba(255, 255, 255, 0.7)' 
-                                    }}
-                                    onClick={handlePfpClick}
-                                >
-                                    <Edit />
-                                </IconButton>
-                            )}
+                            <Avatar src={pfpUrl} sx={{ width: 120, height: 120, mb: 2, border: '2px solid #1976d2', cursor: isEditMode ? 'pointer' : 'default' }} onClick={handlePfpClick} />
+                            {isEditMode && <IconButton sx={{ position: 'absolute', bottom: 10, right: 10, backgroundColor: 'rgba(255, 255, 255, 0.7)' }} onClick={handlePfpClick}><Edit /></IconButton>}
                         </Box>
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            style={{ display: 'none' }}
-                            accept="image/*"
-                            onChange={handleFileChange}
-                        />
+                        <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleFileChange} />
                     </Box>
 
                     <Box sx={{ mb: 4 }}>
@@ -238,34 +225,36 @@ const Profile = () => {
                         <TextField label="Role" fullWidth value={user?.role || ''} disabled variant="filled" />
                     </Box>
 
-                    <Collapse in={isEditMode}>
-                        <Box sx={{ my: 4 }}>
-                            <Typography variant="h5" component="h2" gutterBottom>Change Details</Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                <TextField label="OTP" fullWidth value={otp} onChange={(e) => setOtp(e.target.value)} />
-                                <Button onClick={handleRequestUpdateOtp} variant="contained" disabled={loading}>
-                                    {loading ? <CircularProgress size={24} /> : 'Get OTP'}
-                                </Button>
-                            </Box>
-                        </Box>
-                        <Box sx={{ my: 4 }}>
-                            <Typography variant="h5" component="h2" gutterBottom>Change Password</Typography>
-                            <TextField label="Current Password" type={showPassword ? 'text' : 'password'} fullWidth value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 2 }} InputProps={{ endAdornment: ( <InputAdornment position="end"> <IconButton onClick={() => setShowPassword(!showPassword)} edge="end"> {showPassword ? <VisibilityOff /> : <Visibility />} </IconButton> </InputAdornment> ), }} />
-                            <TextField label="New Password" type={showNewPassword ? 'text' : 'password'} fullWidth value={newPassword} onChange={(e) => setNewPassword(e.target.value)} sx={{ mb: 2 }} InputProps={{ endAdornment: ( <InputAdornment position="end"> <IconButton onClick={() => setShowNewPassword(!showNewPassword)} edge="end"> {showNewPassword ? <VisibilityOff /> : <Visibility />} </IconButton> </InputAdornment> ), }} />
-                            <TextField label="Confirm New Password" type={showConfirmPassword ? 'text' : 'password'} fullWidth value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} sx={{ mb: 2 }} InputProps={{ endAdornment: ( <InputAdornment position="end"> <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end"> {showConfirmPassword ? <VisibilityOff /> : <Visibility />} </IconButton> </InputAdornment> ), }} />
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                <TextField label="OTP" fullWidth value={otp} onChange={(e) => setOtp(e.target.value)} />
-                                <Button onClick={handleRequestPasswordOtp} variant="contained" disabled={loading}>
-                                    {loading ? <CircularProgress size={24} /> : 'Get OTP'}
-                                </Button>
-                            </Box>
-                            <Button variant="contained" color="primary" onClick={handleChangePassword} disabled={loading} fullWidth>
-                                {loading ? <CircularProgress size={24} /> : 'Change Password'}
-                            </Button>
+                    <Collapse in={isEditMode && (email !== user.email || username !== user.username)}>
+                        <Box sx={{ my: 2 }}>
+                            <TextField label="Enter OTP" fullWidth value={otp} onChange={(e) => setOtp(e.target.value)} />
                         </Box>
                     </Collapse>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                    <Collapse in={isEditMode}>
+                        <Box sx={{ my: 2 }}>
+                            <Button variant="outlined" onClick={() => setShowChangePassword(!showChangePassword)}>
+                                Change Password
+                            </Button>
+                            <Collapse in={showChangePassword}>
+                                <Box sx={{ mt: 2 }}>
+                                    <Divider sx={{ my: 2 }} />
+                                    <Typography variant="h5" component="h2" gutterBottom>Change Password</Typography>
+                                    <TextField label="Current Password" type={showPassword ? 'text' : 'password'} fullWidth value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 2 }} InputProps={{ endAdornment: ( <InputAdornment position="end"> <IconButton onClick={() => setShowPassword(!showPassword)} edge="end"> {showPassword ? <VisibilityOff /> : <Visibility />} </IconButton> </InputAdornment> ), }} />
+                                    <TextField label="New Password" type={showNewPassword ? 'text' : 'password'} fullWidth value={newPassword} onChange={(e) => setNewPassword(e.target.value)} sx={{ mb: 2 }} InputProps={{ endAdornment: ( <InputAdornment position="end"> <IconButton onClick={() => setShowNewPassword(!showNewPassword)} edge="end"> {showNewPassword ? <VisibilityOff /> : <Visibility />} </IconButton> </InputAdornment> ), }} />
+                                    <TextField label="Confirm New Password" type={showConfirmPassword ? 'text' : 'password'} fullWidth value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} sx={{ mb: 2 }} InputProps={{ endAdornment: ( <InputAdornment position="end"> <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end"> {showConfirmPassword ? <VisibilityOff /> : <Visibility />} </IconButton> </InputAdornment> ), }} />
+                                    <Collapse in={otpSent && showChangePassword}>
+                                        <TextField label="Enter OTP" fullWidth value={otp} onChange={(e) => setOtp(e.target.value)} sx={{ my: 2 }} />
+                                    </Collapse>
+                                    <Button variant="contained" color="primary" onClick={handleChangePassword} disabled={loading} fullWidth>
+                                        {loading ? <CircularProgress size={24} /> : (otpSent ? 'Confirm Change' : 'Change Password')}
+                                    </Button>
+                                </Box>
+                            </Collapse>
+                        </Box>
+                    </Collapse>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
                         {isEditMode ? (
                             <>
                                 <Button variant="outlined" onClick={handleEditToggle}>Cancel</Button>
