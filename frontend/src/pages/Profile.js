@@ -85,6 +85,11 @@ const Profile = () => {
     };
 
     const handleUpdateProfile = async () => {
+        if (fullName === user.full_name && email === user.email && username === user.username && !selectedFile) {
+            setIsEditMode(false);
+            return;
+        }
+
         if ((email !== user.email || username !== user.username) && !otpSent) {
             await handleRequestUpdateOtp();
             return;
