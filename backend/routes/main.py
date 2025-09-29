@@ -620,7 +620,11 @@ def update_profile(current_user):
         alert_subject = "Username Updated"
 
     if not update_fields:
-        return jsonify({'message': 'No fields to update'}), 400
+        return jsonify({
+            'message': 'No fields to update',
+            'data': data,
+            'current_user_full_name': current_user.get('full_name')
+        }), 400
 
     mongo.db.users.update_one({'_id': current_user['_id']}, {'$set': update_fields})
     
